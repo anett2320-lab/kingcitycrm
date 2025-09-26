@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>King City Ingatlaniroda CRM 1.0</title>
+  <meta name="theme-color" content="#1976d2">
+  <style>
+    :root { --bg:#f6f8fb; --card:#fff; --text:#1f2937; --muted:#6b7280; --primary:#1976d2; --danger:#dc2626; --radius:16px;
+            --st-new:#e5e7eb; --st-appt:#dbeafe; --st-call:#ede9fe; --st-contract:#dcfce7; --st-nvf:#fff7ed; --st-stop:#fee2e2;
+            --st-new-b:#6b7280; --st-appt-b:#2563eb; --st-call-b:#7c3aed; --st-contract-b:#16a34a; --st-nvf-b:#d97706; --st-stop-b:#dc2626; }
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#fff,var(--bg));color:var(--text)}
+    header{position:sticky;top:0;z-index:3;background:rgba(255,255,255,.85);backdrop-filter:blur(6px);border-bottom:1px solid #e5e7eb;padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
+    .title{font-weight:700;font-size:18px;display:flex;align-items:center;gap:10px}.title img{width:28px;height:28px;border-radius:6px}
+    main{padding:16px;max-width:1200px;margin:0 auto}
+    .toolbar,.form{background:var(--card);border-radius:var(--radius);padding:12px;box-shadow:0 8px 20px rgba(0,0,0,.05)}
+    .toolbar{display:grid;gap:8px;grid-template-columns:1fr 1fr}@media(min-width:1000px){.toolbar{grid-template-columns:2fr 1fr 1fr 1fr auto auto auto auto}}
+    input,select,textarea,button{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #d1d5db;background:#fff;font:inherit;color:var(--text)}
+    button.primary{background:var(--primary);border-color:var(--primary);color:#fff}button.ghost{background:transparent;border-color:#cfd8e3}
+    table{width:100%;border-collapse:collapse;background:var(--card);overflow:hidden;border-radius:var(--radius);box-shadow:0 8px 20px rgba(0,0,0,.05)}
+    th,td{text-align:left;padding:10px;border-bottom:1px solid #eef2f7;font-size:14px}
+    th{background:#f2f6fc;position:sticky;top:112px;z-index:1}.row-actions{display:flex;gap:6px}.hint{color:var(--muted);font-size:12px}
+    .grid{display:grid;gap:10px}.grid-3{grid-template-columns:1fr 1fr 1fr}@media(max-width:700px){.grid-3{grid-template-columns:1fr}}
+    dialog::backdrop{background:rgba(0,0,0,.3)}dialog{width:min(900px,96vw);border:none;border-radius:16px;padding:0}
+    .dialog-head{padding:16px;border-bottom:1px solid #eef2f7;font-weight:600}.dialog-body{padding:16px;max-height:70vh;overflow:auto}
+    .dialog-foot{padding:16px;border-top:1px solid #eef2f7;display:flex;justify-content:space-between;gap:8px;align-items:center}
+    .badge{padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid #d1d5db}
+    .badge.st-new{color:var(--st-new-b);border-color:var(--st-new-b);background:var(--st-new)}
+    .badge.st-appt{color:var(--st-appt-b);border-color:var(--st-appt-b);background:var(--st-appt)}
+    .badge.st-call{color:var(--st-call-b);border-color:var(--st-call-b);background:var(--st-call)}
+    .badge.st-contract{color:var(--st-contract-b);border-color:var(--st-contract-b);background:var(--st-contract)}
+    .badge.st-nvf{color:var(--st-nvf-b);border-color:var(--st-nvf-b);background:var(--st-nvf)}
+    .badge.st-stop{color:var(--st-stop-b);border-color:var(--st-stop-b);background:var(--st-stop)}
+    .calendar{background:var(--card);border-radius:var(--radius);box-shadow:0 8px 20px rgba(0,0,0,.05);overflow:hidden}
+    .cal-head{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eef2f7;background:#f8fafc;position:sticky;top:58px;z-index:1}
+    .cal-grid{display:grid; grid-template-columns:repeat(7,1fr);}
+    .cal-day{border-right:1px solid #eef2f7;border-bottom:1px solid #eef2f7;min-height:100px;padding:6px}
+    .cal-day:nth-child(7n){border-right:none}
+    .cal-date{font-size:12px;color:#6b7280;margin-bottom:4px}
+    .cal-item{font-size:12px;border:1px solid #d1d5db;border-radius:8px;padding:4px;margin-bottom:4px}
+    .cal-item.st-new{background:var(--st-new); border-color:var(--st-new-b)}
+    .cal-item.st-appt{background:var(--st-appt); border-color:var(--st-appt-b)}
+    .cal-item.st-call{background:var(--st-call); border-color:var(--st-call-b)}
+    .cal-item.st-contract{background:var(--st-contract); border-color:var(--st-contract-b)}
+    .cal-item.st-nvf{background:var(--st-nvf); border-color:var(--st-nvf-b)}
+    .cal-item.st-stop{background:var(--st-stop); border-color:var(--st-stop-b)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABPklEQVR4nO2aSxIBQRAFjXAJ7uB6nMH1uINrsOrNRIjpT1VljX65p/Ol8Qks59vzc5iYIy1AowC0AI0C0AI0CkAL0CgALUCjALQADR7g/bii56MByngyAhZgPZqKgAT4NZaIEB5ga2R0hNAAteMiI4QFaB0VFSEkQO+YiAjuAUZHeEdwDWAl7xnBLYC1tFcElwBesh73ax6A/mzfimmAiPHWZ5gFiHzkLc8yCUBc9lZnDgcgn/MWZw8FyPCCN+rQHSDD+MKIS1eATOMLvU7NATKOL/S4NQXIPL7Q6lgdYA/jCy2uVQH2NL5Q67yM/kcoQ5zL/dV9W/yHERoFoAVoFIAWoJk+wCn6wK23rL/+aSwjCkAL0CgALUCjALQAjQLQAjQKQAvQKAAtQDN9gOFvhffO9FeAAtACNApAC9B8AYyrV6gfU+gwAAAAAElFTkSuQmCC" alt=""> King City Ingatlaniroda CRM 1.0 ( Tulajdonos: Proksné Anett)</div>
+    <div class="hint">Offline • Mobilbarát • localStorage</div>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button class="ghost" id="tab-lista">📋 Lista</button>
+      <button class="ghost" id="tab-naptar">🗓️ Naptár</button>
+    </div>
+
+    <section class="toolbar grid" id="toolbar">
+      <input id="q" placeholder="Keresés: név / település / cím / megjegyzés">
+      <select id="f-statusz">
+        <option value="">Státusz (mind)</option>
+        <option>Kereső vevő</option>
+        <option>Időpontegyeztetés</option>
+        <option>Visszahívás</option>
+        <option>Szerződés</option>
+        <option>NVF</option>
+        <option>Ne keresd</option>
+      </select>
+      <select id="f-prio">
+        <option value="">Prioritás (mind)</option>
+        <option>Magas</option><option>Közepes</option><option>Alacsony</option>
+      </select>
+      <input id="f-felelos" placeholder="Felelős">
+      <button class="ghost" id="btn-import">CSV import</button>
+      <button class="ghost" id="btn-export">CSV export</button>
+      <button class="ghost" id="btn-backup">JSON mentés</button>
+      <button class="ghost" id="btn-restore">JSON betöltés</button>
+      <button class="ghost" id="btn-ics-all">ICS (30 nap)</button>
+    </section>
+
+    <div style="height:12px"></div>
+    <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+      <button class="primary" id="btn-add">+ Új rekord</button>
+    </div>
+
+    <section class="table" id="view-lista">
+      <table>
+        <thead>
+          <tr>
+            <th>Település</th><th>Cím</th><th>Hirdető</th><th>Típus</th><th>m²</th>
+            <th>Irányár</th><th>Státusz</th><th>Prioritás</th><th>Köv. utánk.</th><th>Művelet</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </section>
+
+    <section id="view-naptar" class="calendar" style="display:none">
+      <div class="cal-head">
+        <div>
+          <button id="prevMonth">◀</button>
+          <strong id="monthLabel"></strong>
+          <button id="nextMonth">▶</button>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <input id="cal-filter-felelos" placeholder="Felelős szűrő">
+          <select id="cal-filter-prio">
+            <option value="">Prioritás (mind)</option>
+            <option>Magas</option><option>Közepes</option><option>Alacsony</option>
+          </select>
+          <button id="cal-ics-month" class="ghost">Aktuális hónap ICS</button>
+        </div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </section>
+  </main>
+
+  <dialog id="dlg">
+    <div class="dialog-head">Rekord</div>
+    <div class="dialog-body">
+      <form id="form" class="grid grid-3">
+        <input type="hidden" name="id">
+        <label>Forrás (site)<br><input name="forras" placeholder="ingatlan.com / jófogás / zenga"></label>
+        <label>Hirdetés link<br><input name="link" placeholder="https://..."></label>
+        <label>Hirdető típusa<br>
+          <select name="hirdetoTipus"><option>tulaj</option><option>iroda</option></select>
+        </label>
+        <label>Ügyfél típusa<br>
+          <select name="ugyfelTipus"><option>Eladó</option><option>Vevő</option></select>
+        </label>
+        <label>Hirdető neve<br><input name="hirdetoNev"></label>
+        <label>Telefon<br><input name="telefon"></label>
+        <label>E-mail<br><input name="email"></label>
+        <label>Település<br><input name="telepules"></label>
+        <label>Cím / hrsz<br><input name="cim"></label>
+        <label>Ingatlan típusa<br><input name="tipus"></label>
+        <label>Állapot<br><input name="allapot"></label>
+        <label>Szobaszám<br><input name="szobaszam"></label>
+        <label>Alapterület (m²)<br><input name="alapterulet"></label>
+        <label>Telek (m²)<br><input name="telek"></label>
+        <label>Irányár (Ft)<br><input name="ar"></label>
+        <label>Fűtés<br><input name="futes"></label>
+        <label>Komfort<br><input name="komfort"></label>
+        <label>Energetika<br><input name="energetika"></label>
+        <label>Hitel releváns?<br>
+          <select name="hitel"><option>I</option><option selected>N</option></select>
+        </label>
+        <label class="grid-3">Megjegyzés<br><textarea name="megjegyzes" rows="4" placeholder="Szabad szöveg..."></textarea></label>
+
+        <label>Első észlelés<br><input type="date" name="elsoEszleles"></label>
+        <label>Első kapcsolat<br><input type="datetime-local" name="elsoKapcs"></label>
+
+        <label>Státusz<br>
+          <select name="statusz">
+            <option>Kereső vevő</option>
+            <option>Időpontegyeztetés</option>
+            <option>Visszahívás</option>
+            <option>Szerződés</option>
+            <option>NVF</option>
+            <option>Ne keresd</option>
+          </select>
+        </label>
+
+        <label>Következő utánkövetés<br><input type="datetime-local" name="kovUtanDT"></label>
+
+        <label>Prioritás<br><select name="prioritas"><option>Magas</option><option selected>Közepes</option><option>Alacsony</option></select></label>
+        <label>Felelős<br><input name="felelos"></label>
+        <label>Utolsó érintés<br><input type="date" name="utolsoErintes"></label>
+        <label>Csatorna<br><input name="csatorna"></label>
+        <label>Csatolmányok (Drive)<br><input name="drive"></label>
+        <label>Adatkezelési hozzájárulás<br><select name="hozzajarulas"><option>I</option><option selected>N</option></select></label>
+
+        <div style="grid-column:1/-1; border-top:1px dashed #e5e7eb; padding-top:8px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; align-items:center;">
+          <label><input type="checkbox" name="eml" value="I"> Emlékeztetőt kérek</label>
+          <label>Értesítsen előtte<br>
+            <select name="emlLead">
+              <option value="0">0 perc</option>
+              <option value="5">5 perc</option>
+              <option value="10" selected>10 perc</option>
+              <option value="15">15 perc</option>
+              <option value="30">30 perc</option>
+            </select>
+          </label>
+          <div class="hint">Az emlékeztető akkor jelez, ha ez a lap meg van nyitva.</div>
+        </div>
+      </form>
+    </div>
+    <div class="dialog-foot">
+      <div>
+        <button id="btn-ics-one" class="ghost">ICS export</button>
+      </div>
+      <div>
+        <button class="ghost" id="btn-cancel">Mégse</button>
+        <button class="primary" id="btn-save">Mentés</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" style="position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:12px;box-shadow:0 10px 20px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:5">Mentve</div>
+  <input id="fileCsv" type="file" accept=".csv" style="display:none">
+  <input id="fileJson" type="file" accept=".json" style="display:none">
+
+  <script>
+    const STORAGE_KEY = 'kingcity_crm_singlefile_v5_status_update';
+    const NOTIF_KEY = 'kingcity_crm_notified_v1';
+    const OLD_KEYS = ['kingcity_crm_singlefile_v4_dt_reminders','kingcity_crm_singlefile_v3_notifycolors','kingcity_crm_singlefile_v2_custom','kingcity_crm_singlefile_v1'];
+
+    const rowsEl = document.getElementById('rows');
+    const dlg = document.getElementById('dlg');
+    const form = document.getElementById('form');
+    const fileCsv = document.getElementById('fileCsv');
+    const fileJson = document.getElementById('fileJson');
+    const toast = document.getElementById('toast');
+
+    const viewLista = document.getElementById('view-lista');
+    const viewNaptar = document.getElementById('view-naptar');
+    document.getElementById('tab-lista').onclick = () => { viewLista.style.display='block'; viewNaptar.style.display='none'; };
+    document.getElementById('tab-naptar').onclick = () => { viewLista.style.display='none'; viewNaptar.style.display='block'; renderCalendar(); };
+
+    function showToast(msg){ toast.textContent = msg; toast.style.opacity=1; toast.style.transform='translateX(-50%) translateY(-6px)'; setTimeout(()=>{ toast.style.opacity=0; toast.style.transform='translateX(-50%)'; }, 1800); }
+
+    function storageAvailable(){ try { const x='__test__'; localStorage.setItem(x,'1'); localStorage.removeItem(x); return true; } catch(e){ return false; } }
+    const STORAGE_OK = storageAvailable();
+
+    const state = { rows: load(), filter:{ q:'', statusz:'', prioritas:'', felelos:'' }, cal: monthOf(new Date()) };
+    const notified = loadNotified();
+
+    // Migration: if empty, try older keys
+    if (state.rows.length === 0){
+      for (const k of OLD_KEYS){
+        try{
+          const d = JSON.parse(localStorage.getItem(k) || '[]');
+          if (Array.isArray(d) && d.length){
+            state.rows = d;
+            save();
+            break;
+          }
+        }catch(e){}
+      }
+    }
+
+    // Toolbar binds
+    document.getElementById('q').addEventListener('input', e => { state.filter.q = e.target.value.toLowerCase(); render(); });
+    document.getElementById('f-statusz').addEventListener('change', e => { state.filter.statusz = e.target.value; render(); });
+    document.getElementById('f-prio').addEventListener('change', e => { state.filter.prioritas = e.target.value; render(); });
+    document.getElementById('f-felelos').addEventListener('input', e => { state.filter.felelos = e.target.value.toLowerCase(); render(); });
+    document.getElementById('btn-export').addEventListener('click', exportCSV);
+    document.getElementById('btn-import').addEventListener('click', () => fileCsv.click());
+    document.getElementById('btn-add').addEventListener('click', () => openDialog());
+    document.getElementById('btn-backup').addEventListener('click', backupJSON);
+    document.getElementById('btn-restore').addEventListener('click', () => fileJson.click());
+    document.getElementById('btn-ics-all').addEventListener('click', () => exportICS(upcomingDays(30)));
+
+    document.getElementById('btn-cancel').addEventListener('click', () => dlg.close());
+    document.getElementById('btn-save').addEventListener('click', saveDialog);
+    fileCsv.addEventListener('change', importCSV);
+    fileJson.addEventListener('change', restoreJSON);
+
+    // Calendar controls
+    document.getElementById('prevMonth').onclick = () => { shiftMonth(-1); };
+    document.getElementById('nextMonth').onclick = () => { shiftMonth(1); };
+    document.getElementById('cal-ics-month').onclick = () => {
+      const days = daysOfMonth(state.cal.year, state.cal.month);
+      exportICS(days.flatMap(d => eventsOnDate(d)));
+    };
+    document.getElementById('cal-filter-felelos').addEventListener('input', renderCalendar);
+    document.getElementById('cal-filter-prio').addEventListener('change', renderCalendar);
+
+    function uid(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+    function load(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY))||[] }catch(e){ return [] } }
+    function save(){
+      if (!STORAGE_OK){ showToast('Mentve (ideiglenes)'); return; }
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.rows)); showToast('Mentve'); } catch(e){ alert('Mentési hiba – böngésző tároló tiltva / megtelt.'); }
+    }
+    function loadNotified(){ try{ return JSON.parse(localStorage.getItem(NOTIF_KEY)) || {}; }catch(e){ return {}; } }
+    function saveNotified(){ try{ localStorage.setItem(NOTIF_KEY, JSON.stringify(notified)); }catch(e){} }
+
+    function money(x){ if(!x) return ''; try{ const n = +String(x).replace(/\s|\./g,'').replace(',','.'); return isNaN(n)?x:n.toLocaleString('hu-HU'); }catch{return x} }
+    function statusClass(s){
+      const v = (s||'').toLowerCase();
+      if (v === 'kereső vevő') return 'st-new';
+      if (v === 'időpontegyeztetés') return 'st-appt';
+      if (v === 'visszahívás') return 'st-call';
+      if (v === 'szerződés') return 'st-contract';
+      if (v === 'nvf') return 'st-nvf';
+      if (v === 'ne keresd') return 'st-stop';
+      return '';
+    }
+    function fmtKov(r){
+      if (r.kovUtanDT) return r.kovUtanDT.replace('T',' ').slice(0,16);
+      if (r.kovUtan) return r.kovUtan;
+      return '';
+    }
+
+    function render(){
+      const q = state.filter.q;
+      const rows = state.rows.filter(r => {
+        const okQ = q ? (
+          (r.hirdetoNev||'').toLowerCase().includes(q) ||
+          (r.telepules||'').toLowerCase().includes(q) ||
+          (r.cim||'').toLowerCase().includes(q) ||
+          (r.megjegyzes||'').toLowerCase().includes(q)
+        ) : true;
+        const okS = state.filter.statusz ? r.statusz === state.filter.statusz : true;
+        const okP = state.filter.prioritas ? r.prioritas === state.filter.prioritas : true;
+        const okF = state.filter.felelos ? (r.felelos||'').toLowerCase().includes(state.filter.felelos) : true;
+        return okQ && okS && okP && okF;
+      });
+      rowsEl.innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.telepules||''}</td>
+          <td>${(r.cim||'')}${r.link?` <a href="${r.link}" target="_blank" rel="noreferrer" style="color:#1976d2;text-decoration:underline">link</a>`:''}</td>
+          <td>${r.hirdetoNev||''} <span class="hint">(${r.hirdetoTipus||''})</span></td>
+          <td>${r.tipus||''}</td>
+          <td>${r.alapterulet||''}</td>
+          <td>${money(r.ar)}</td>
+          <td><span class="badge ${statusClass(r.statusz)}">${r.statusz||''}</span></td>
+          <td><span class="badge ${r.prioritas==='Magas'?'high': (r.prioritas==='Alacsony'?'low':'')}">${r.prioritas||''}</span></td>
+          <td>${fmtKov(r)}</td>
+          <td class="row-actions">
+            <button onclick="editRow('${r.id}')">✏️</button>
+            <button onclick="delRow('${r.id}')" style="color:var(--danger)">🗑</button>
+            <button onclick="downloadICS('${r.id}')" title="ICS export">📅</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openDialog(init){
+      form.reset();
+      const data = init || { id: uid(), statusz:'Kereső vevő', prioritas:'Közepes', hozzajarulas:'N', hitel:'N', ugyfelTipus:'Eladó', eml:'I', emlLead:'10' };
+      for (const [k,v] of Object.entries(data)){ if (form[k] !== undefined) form[k].value = v ?? ''; }
+      const emlCb = form.querySelector('input[name="eml"]');
+      if (emlCb) emlCb.checked = data.eml === 'I' || data.eml === true || data.eml === 'on';
+      // auto-set last touch today & on status change
+      const ue = form.querySelector('input[name="utolsoErintes"]');
+      const setToday = () => { const t = new Date(); ue.value = t.toISOString().slice(0,10); };
+      if (!ue.value) setToday();
+      const statusSel = form.querySelector('select[name="statusz"]');
+      statusSel.addEventListener('change', setToday);
+
+      if (typeof dlg.showModal === 'function') dlg.showModal(); else alert('A böngésző nem támogatja a párbeszédablakot.');
+
+      document.getElementById('btn-ics-one').onclick = () => {
+        const d = collectFormData();
+        const ev = toEvent(d);
+        if (!ev) { alert('Nincs beállítva Következő utánkövetés dátum/idő.'); return; }
+        downloadICSData([ev], `utan_kovetes_${(d.telepules||'').replace(/\s+/g,'_')}.ics`);
+      };
+    }
+
+    function collectFormData(){
+      const data = {};
+      for (const el of form.elements){
+        if (!el.name) continue;
+        if (el.type === 'checkbox') data[el.name] = el.checked ? 'I' : 'N';
+        else data[el.name] = el.value;
+      }
+      if (!data.id) data.id = uid();
+      if (data.kovUtanDT) data.kovUtan = data.kovUtanDT.slice(0,10);
+      const t = new Date(); data.utolsoErintes = t.toISOString().slice(0,10);
+      return data;
+    }
+
+    function saveDialog(){
+      const data = collectFormData();
+      const idx = state.rows.findIndex(r => r.id === data.id);
+      if (idx >= 0) state.rows[idx] = data; else state.rows.unshift(data);
+      save(); render(); if (dlg.open) dlg.close();
+      if (data.eml === 'I' && 'Notification' in window && Notification.permission === 'default'){
+        try{ Notification.requestPermission(); }catch(e){}
+      }
+    }
+
+    function editRow(id){
+      const row = state.rows.find(r => r.id === id);
+      if (row) openDialog(row);
+    }
+    function delRow(id){
+      if (!confirm('Biztosan törlöd?')) return;
+      state.rows = state.rows.filter(r => r.id !== id);
+      save(); render();
+    }
+
+    // CSV
+    function exportCSV(){
+      const headers = ["Forrás (site)","Hirdetés link","Hirdető típusa (tulaj/iroda)","Ügyfél típusa","Hirdető neve","Telefon","E-mail","Település","Cím / helyrajzi jel","Ingatlan típusa","Állapot","Szobaszám","Alapterület_m2","Telek_m2","Irányár_Ft","Fűtés","Komfort","Energetika","Hitel releváns?","Megjegyzés","Első észlelés","Első kapcsolatfelvétel","Státusz","Következő utánkövetés","Következő utánkövetés idő","Prioritás","Felelős tanácsadó","Utolsó érintés","Csatorna","Csatolmányok (Drive)","Adatkezelési hozzájárulás","Emlékeztető","Emlékeztető előtte (perc)","id"];
+      const lines = state.rows.map(r => [
+        r.forras||'', r.link||'',
+        r.hirdetoTipus||'',
+        r.ugyfelTipus||'',
+        r.hirdetoNev||'', r.telefon||'', r.email||'',
+        r.telepules||'', r.cim||'', r.tipus||'', r.allapot||'', r.szobaszam||'',
+        r.alapterulet||'', r.telek||'', r.ar||'', r.futes||'', r.komfort||'',
+        r.energetika||'', r.hitel||'',
+        (r.megjegyzes||'').replace(/\n/g,'\\n'),
+        r.elsoEszleles||'', r.elsoKapcs||'', r.statusz||'',
+        (r.kovUtanDT ? r.kovUtanDT.slice(0,10) : (r.kovUtan||'')),
+        (r.kovUtanDT ? r.kovUtanDT.slice(11,16) : ''),
+        r.prioritas||'', r.felelos||'',
+        r.utolsoErintes||'', r.csatorna||'', r.drive||'', r.hozzajarulas||'',
+        r.eml||'N', r.emlLead||'10', r.id||''
+      ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','));
+      const csv = [headers.join(','), ...lines].join('\n');
+      const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'kingcity_crm_export.csv'; a.click();
+      setTimeout(()=> URL.revokeObjectURL(url), 1000);
+    }
+
+    function importCSV(e){
+      const file = e.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = reader.result;
+        const [headerLine, ...rows] = text.split(/\r?\n/).filter(Boolean);
+        const parse = (line) => {
+          const out=[]; let cur=''; let q=false;
+          for (let i=0;i<line.length;i++){ const ch=line[i];
+            if (ch=='"'){ if(q && line[i+1]=='"'){cur+='"'; i++;} else q=!q; }
+            else if (ch==',' && !q){ out.push(cur); cur=''; }
+            else cur+=ch;
+          }
+          out.push(cur); return out;
+        };
+        const mapped = rows.map(l => parse(l));
+        const headers = parse(headerLine);
+        const nameToIdx = Object.fromEntries(headers.map((h,i)=>[h,i]));
+        const get = (arr, name) => (nameToIdx[name] != null ? arr[nameToIdx[name]] : '');
+        mapped.forEach(cols => {
+          const d = {
+            forras: get(cols, "Forrás (site)"),
+            link: get(cols, "Hirdetés link"),
+            hirdetoTipus: get(cols, "Hirdető típusa (tulaj/iroda)") || "tulaj",
+            ugyfelTipus: get(cols, "Ügyfél típusa") || "Eladó",
+            hirdetoNev: get(cols, "Hirdető neve"),
+            telefon: get(cols, "Telefon"),
+            email: get(cols, "E-mail"),
+            telepules: get(cols, "Település"),
+            cim: get(cols, "Cím / helyrajzi jel"),
+            tipus: get(cols, "Ingatlan típusa"),
+            allapot: get(cols, "Állapot"),
+            szobaszam: get(cols, "Szobaszám"),
+            alapterulet: get(cols, "Alapterület_m2"),
+            telek: get(cols, "Telek_m2"),
+            ar: get(cols, "Irányár_Ft"),
+            futes: get(cols, "Fűtés"),
+            komfort: get(cols, "Komfort"),
+            energetika: get(cols, "Energetika"),
+            hitel: get(cols, "Hitel releváns?") || "N",
+            megjegyzes: (get(cols, "Megjegyzés")||'').replace(/\\n/g,'\n'),
+            elsoEszleles: get(cols, "Első észlelés"),
+            elsoKapcs: get(cols, "Első kapcsolatfelvétel"),
+            statusz: get(cols, "Státusz") || "Kereső vevő",
+            prioritas: get(cols, "Prioritás") || "Közepes",
+            felelos: get(cols, "Felelős tanácsadó"),
+            utolsoErintes: get(cols, "Utolsó érintés") || new Date().toISOString().slice(0,10),
+            csatorna: get(cols, "Csatorna"),
+            drive: get(cols, "Csatolmányok (Drive)"),
+            hozzajarulas: get(cols, "Adatkezelési hozzájárulás") || "N",
+            eml: get(cols, "Emlékeztető") || "N",
+            emlLead: get(cols, "Emlékeztető előtte (perc)") || "10",
+            id: get(cols, "id") || (Math.random().toString(36).slice(2)+Date.now().toString(36))
+          };
+          const datePart = get(cols, "Következő utánkövetés");
+          const timePart = get(cols, "Következő utánkövetés idő");
+          if (datePart){
+            d.kovUtan = datePart;
+            d.kovUtanDT = (timePart ? (datePart + 'T' + timePart) : (datePart + 'T09:00'));
+          }
+          state.rows.unshift(d);
+        });
+        save(); render();
+        fileCsv.value = '';
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+
+    // JSON backup
+    function backupJSON(){
+      const blob = new Blob([JSON.stringify(state.rows, null, 2)], {type:'application/json'});
+      const a = document.createElement('a'); const url = URL.createObjectURL(blob);
+      a.href = url; a.download = 'kingcity_crm_backup.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }
+    function restoreJSON(e){
+      const file = e.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{ const data = JSON.parse(reader.result);
+          if (Array.isArray(data)){ state.rows = data; save(); render(); showToast('JSON betöltve'); }
+          else alert('A JSON nem megfelelő formátumú.');
+        }catch(err){ alert('Nem sikerült beolvasni a JSON-t.'); }
+        fileJson.value = '';
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+
+    // Calendar/helpers
+    function monthOf(date){ return { year: date.getFullYear(), month: date.getMonth() }; }
+    function shiftMonth(delta){ const d = new Date(state.cal.year, state.cal.month + delta, 1); state.cal = monthOf(d); renderCalendar(); }
+    function daysOfMonth(y, m){
+      const first = new Date(y, m, 1);
+      const start = new Date(first); start.setDate(1 - ((first.getDay()+6)%7)); // Monday first
+      const days = [];
+      for (let i=0;i<42;i++){ const d = new Date(start); d.setDate(start.getDate()+i); days.push(d); }
+      document.getElementById('monthLabel').textContent = y + '. ' + String(m+1).padStart(2,'0');
+      return days;
+    }
+    function sameDate(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+    function recDate(rec){
+      if (rec.kovUtanDT) return new Date(rec.kovUtanDT);
+      if (rec.kovUtan) return new Date(rec.kovUtan + 'T09:00:00');
+      return null;
+    }
+
+    function eventsOnDate(date){
+      const felelosF = (document.getElementById('cal-filter-felelos').value||'').toLowerCase();
+      const prioF = document.getElementById('cal-filter-prio').value||'';
+      return state.rows.filter(r => {
+        const dd = recDate(r); if (!dd) return false;
+        const okD = sameDate(dd, date);
+        const okF = felelosF ? (String(r.felelos||'').toLowerCase().includes(felelosF)) : true;
+        const okP = prioF ? r.prioritas === prioF : true;
+        return okD && okF && okP;
+      }).map(r => ({ title: ( (r.telepules||'') + ' – ' + (r.cim||'') ).trim() || r.hirdetoNev || 'Utánkövetés', rec: r }));
+    }
+
+    function renderCalendar(){
+      const grid = document.getElementById('cal-grid');
+      const days = daysOfMonth(state.cal.year, state.cal.month);
+      grid.innerHTML = '';
+      const weekdays = ['H','K','Sz','Cs','P','Sz','V'];
+      weekdays.forEach(w => { const el = document.createElement('div'); el.className='cal-day'; el.style.background='#f9fafb'; el.style.fontWeight='600'; el.textContent=w; grid.appendChild(el); });
+      days.forEach(d => {
+        const wrap = document.createElement('div'); wrap.className='cal-day';
+        const dateEl = document.createElement('div'); dateEl.className='cal-date'; dateEl.textContent = d.toLocaleDateString('hu-HU');
+        wrap.appendChild(dateEl);
+        const events = eventsOnDate(d);
+        if (events.length===0){ const empty = document.createElement('div'); empty.className='cal-empty'; text='—'; empty.textContent=text; wrap.appendChild(empty); }
+        else {
+          events.forEach(ev => {
+            const t = recDate(ev.rec);
+            const hhmm = t ? (' ' + String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0')) : '';
+            const item = document.createElement('div'); item.className='cal-item '+statusClass(ev.rec.statusz);
+            item.innerHTML = '<strong>'+(ev.rec.felelos||'')+'</strong> • '+ev.title+hhmm+' <span class="hint">['+(ev.rec.statusz||'')+']</span>';
+            item.onclick = () => editRow(ev.rec.id);
+            wrap.appendChild(item);
+          });
+        }
+        grid.appendChild(wrap);
+      });
+    }
+
+    // ICS
+    function fmtDateICS(d){ const y = d.getFullYear(); const m = String(d.getMonth()+1).padStart(2,'0'); const day = String(d.getDate()).padStart(2,'0'); const hh=String(d.getHours()).padStart(2,'0'); const mm=String(d.getMinutes()).padStart(2,'0'); const ss='00'; return ''+y+m+day+'T'+hh+mm+ss; }
+    function toEvent(rec){
+      const start = recDate(rec);
+      if (!start) return null;
+      const end = new Date(start.getTime()+30*60*1000);
+      const title = ('Utánkövetés: '+((rec.telepules||'')+' '+(rec.cim||''))).trim() || 'Utánkövetés';
+      const desc = 'Hirdető: '+(rec.hirdetoNev||'')+'\nTel: '+(rec.telefon||'')+'\nMegjegyzés: '+(rec.megjegyzes||'')+'\nLink: '+(rec.link||'');
+      return { uid: rec.id, start, end, title, desc };
+    }
+    function icsFromEvents(events){
+      const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//King City Ingatlaniroda CRM 1.0//HU'];
+      events.forEach(ev => {
+        lines.push('BEGIN:VEVENT');
+        lines.push('UID:'+ev.uid);
+        lines.push('DTSTAMP:'+fmtDateICS(new Date()));
+        lines.push('DTSTART:'+fmtDateICS(ev.start));
+        lines.push('DTEND:'+fmtDateICS(ev.end));
+        lines.push('SUMMARY:'+ev.title.replace(/\r?\n/g,' '));
+        lines.push('DESCRIPTION:'+ev.desc.replace(/\r?\n/g,'\\n'));
+        lines.push('END:VEVENT');
+      });
+      lines.push('END:VCALENDAR');
+      return lines.join('\r\n');
+    }
+    function downloadICSData(events, filename){
+      if (!events || events.length===0){ alert('Nincs exportálható esemény.'); return; }
+      const ics = icsFromEvents(events);
+      const blob = new Blob([ics], {type:'text/calendar'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+      setTimeout(()=> URL.revokeObjectURL(url), 1000);
+    }
+    function downloadICS(id){ const rec = state.rows.find(r => r.id===id); if(!rec) return; const ev = toEvent(rec); if(!ev){ alert('Nincs Következő utánkövetés dátum/idő.'); return; } downloadICSData([ev], 'utan_kovetes_'+(rec.telepules||'').replace(/\s+/g,'_')+'.ics'); }
+    function upcomingDays(n){ const today = new Date(); const until = new Date(today.getTime()+n*24*60*60*1000); return state.rows.filter(r => { const d = recDate(r); return d && d>=today && d<=until; }).map(toEvent).filter(Boolean); }
+
+    // Reminders engine (per-record)
+    function notifyUser(title, body){
+      try{
+        if ('Notification' in window){
+          if (Notification.permission === 'granted'){ new Notification(title, { body }); }
+          else if (Notification.permission === 'default'){ Notification.requestPermission(); }
+          else { alert(title+'\n\n'+body); }
+        } else { alert(title+'\n\n'+body); }
+      }catch(e){ alert(title+'\n\n'+body); }
+    }
+    function reminderKey(rec){
+      return (rec.id||'') + '|' + (rec.kovUtanDT||rec.kovUtan||'');
+    }
+    function checkReminders(){
+      const now = new Date();
+      state.rows.forEach(rec => {
+        if (rec.eml !== 'I') return;
+        const when = recDate(rec); if (!when) return;
+        const lead = parseInt(rec.emlLead||'10',10)*60*1000;
+        const remindAt = new Date(when.getTime() - lead);
+        if (now >= remindAt && now <= new Date(when.getTime()+15*60*1000)){
+          const k = reminderKey(rec);
+          if (!notified[k]){
+            notified[k] = new Date().toISOString();
+            saveNotified();
+            notifyUser('Emlékeztető: '+(rec.telepules||'')+' – '+(rec.cim||''), 'Státusz: '+(rec.statusz||'')+' • '+(when.toLocaleString('hu-HU')));
+          }
+        }
+      });
+    }
+    setInterval(checkReminders, 60000);
+    render(); renderCalendar();
+  </script>
+</body>
+</html>
